@@ -1,6 +1,6 @@
 <template>
     <div class="hello">
-        <div id="myChart" :style="{width: '500px', height: '500px'}"></div>
+        <div id="myChart" :style="{width: '600px', height: '600px'}"></div>
     </div>
 </template>
 
@@ -47,25 +47,30 @@
                     ]
                 };
                 let myChart = echarts.init(document.getElementById('myChart'))
-                this.$axios({
-                    methods: 'POST',
-                    url: '/rest/report/quarterly',
-                    data: this.qs.stringify({
-                        year: this.year,
-                        statisDimens: "total",
-                        subNum: "2",
-                    }),
-                })
+
+                let param = {
+                    year: "2011",
+                    statisDimens: "total",
+                    subNum: "2",
+                };
+                this.$axios.post('https://haoxipeng.chinacloudapp.cn/scrm-1.0/rest/report/quarterly', param)
                     .then(response => {
+                        console.log(response);
                         for (let i = 0; i < 4; i++) {
-                            option.dataset.source.push(['第' + (i + 1) + '季度', response.data.totalSalesList[i].salesAmount, response.data.totalSalesList[i].salesCount])
+                            option.dataset.source.push([
+                                '第' + (i + 1) + '季度',
+                                response.data.data.totalSalesList[i][0].salesAmount,
+                                response.data.data.totalSalesList[i][0].salesCount,
+                            ])
                         }
+                        console.log(option)
+                        // 绘制图表
+                        myChart.setOption(option)
                     })
                     .catch(error => {
+                        console.log(error);
                         this.$message.error('Request Error, please check the console to find out what goes wrong.');
-                    })
-                // 绘制图表
-                myChart.setOption(option)
+                    });
             },
         },
         mounted() {
