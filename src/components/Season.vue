@@ -1,7 +1,15 @@
 <template>
     <el-row>
         <el-col>
-            <SeasonTotal :year="totalYear"></SeasonTotal>
+            <el-card class="box-card">
+                <div slot="header" class="clearfix">
+                    <span>总体销量统计</span>
+                    <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+                </div>
+                <div>
+                    <SeasonTotal :year="totalYear"></SeasonTotal>
+                </div>
+            </el-card>
         </el-col>
     </el-row>
 </template>
@@ -15,12 +23,14 @@
         },
         data () {
             return {
-                totalYear: "2012"
+                totalYear: "2011"
             }
         }
     }
 </script>
 
 <style scoped>
-
+    .box-card {
+        width: 50%;
+    }
 </style>
