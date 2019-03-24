@@ -1,5 +1,41 @@
 <template>
     <el-card class="box-card">
+        <el-popover
+                placement="right"
+                width="400"
+                trigger="click">
+            <el-form :model="form" label-width="80px" ref="form">
+                <el-form-item label="活动名称">
+                    <el-input v-model="addForm.title" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="活动内容">
+                    <el-input v-model="addForm.desc" auto-complete="off" rows="7" type="textarea"></el-input>
+                </el-form-item>
+                <el-form-item label="起止时间">
+                    <el-date-picker
+                            v-model="addForm.time"
+                            type="daterange"
+                            align="right"
+                            unlink-panels
+                            range-separator="至"
+                            start-placeholder="开始"
+                            end-placeholder="结束"
+                            @change="getSTime"
+                            format="yyyy-MM-dd"
+                            :picker-options="pickerOptions2">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="活动图片">
+                    <el-input v-model="addForm.img" auto-complete="off"></el-input>
+                    <img :src="addForm.img" style="width: 40%"/>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="addActivity" round>立即创建</el-button>
+                    <el-button type="warning" round>取消</el-button>
+                </el-form-item>
+            </el-form>
+            <el-button slot="reference" type="primary" round>添加活动</el-button>
+        </el-popover>
         <el-table
                 :data="tableData"
                 style="width: 100%"
@@ -45,7 +81,7 @@
                 <template slot-scope="scope">
                     <el-button
                             size="mini"
-                            @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                            @click="handleEdit(scope.$index, scope.row)" round>编辑</el-button>
 
                     <el-dialog title="修改活动信息" :visible.sync="dialogFormVisible">
                         <el-form :model="form">
@@ -73,15 +109,15 @@
                             </el-form-item>
                         </el-form>
                         <div slot="footer" class="dialog-footer">
-                            <el-button @click="dialogFormVisible = false">取 消</el-button>
-                            <el-button type="primary" @click="changeActiv">确 定</el-button>
+                            <el-button @click="dialogFormVisible = false" round>取 消</el-button>
+                            <el-button type="primary" @click="changeActiv" round>确 定</el-button>
                         </div>
                     </el-dialog>
 
                     <el-button
                             size="mini"
                             type="danger"
-                            @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                            @click="handleDelete(scope.$index, scope.row)" round>删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -92,14 +128,6 @@
     export default {
         name: "Activity",
         methods: {
-            tableRowClassName({row, rowIndex}) {
-                if (rowIndex === 1) {
-                    return 'warning-row';
-                } else if (rowIndex === 3) {
-                    return 'success-row';
-                }
-                return '';
-            },
             handleEdit (index, row) {
                 console.log(index, row);
             },
@@ -109,6 +137,13 @@
         },
         data () {
             return {
+                addForm: {
+                    id: '',
+                    title: '',
+                    desc: '',
+                    img: '',
+                    time: [],
+                },
                 dialogFormVisible: false,
                 tableData: [{
                     id: '12987122',
@@ -164,7 +199,18 @@
             this.getActivities()
         },
         methods: {
+            getSTime (val) {
+                this.addForm.time = val;
+            },
+            onSubmit () {
+                console.log('submit!');
+            },
+            addActivity () {
+                console.log("type:" + typeof this.addForm.time[0])
+                console.log("time: "+this.addForm.time[0])
+            },
             getActivities () {
+                this.tableData = [];
                 this.$axios({
                     methods: 'GET',
                     url: 'https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/selectList',
@@ -173,7 +219,7 @@
                     }),
                 })
                     .then(response => {
-                        console.log(response)
+                        console.log(response);
                         for (let activity of response.data.list) {
                             this.tableData.push({
                                 id: activity.id,
@@ -190,16 +236,101 @@
                         this.$message.error('Request Error, please check the console to find out what goes wrong.');
                     })
             },
+            handleDelete (index, row) {
+                this.$axios.get(`https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/delete?activity_id=${row.id}`)
+                    .then(response => {
+                        if(response.data.success){
+                            this.$message({
+                                message: 'Success to delete activity. Congrats!',
+                                type: 'success',
+                            })
+                            this.getActivities()
+                        }
+                        else {
+                            this.$message({
+                                message: 'Failed to delete activity. Shame!',
+                                type: 'warning'
+                            })
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        this.$message.error('Request Error, please check the console to find out what goes wrong.');
+                    })
+            },
             handleEdit (index, row) {
                 this.dialogFormVisible = true
-                this.form.id = row.id;
-                this.form.title = row.title;
-                this.form.desc = row.desc;
-                this.form.img = row.img;
-                this.form.time = [row.start, row.end];
+                // this.form.id = row.id;
+                // this.form.title = row.title;
+                // this.form.desc = row.desc;
+                // this.form.img = row.img;
+                // this.form.time = [row.start, row.end];
+                console.log(typeof row.id)
+                let param = {
+                    'id': 4,
+                }
+                // this.$axios.get(`https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/selectById?id=${row.id}`)
+                this.$axios({
+                    method: 'GET',
+                    url: `https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/selectById?id=${row.id}`,
+                    // data: {
+                    //     id: 4
+                    // }
+                })
+                    .then(response => {
+                        this.form.id = response.data.id;
+                        this.form.title = response.data.activ_title;
+                        this.form.desc = response.data.activ_desc;
+                        this.form.img = response.data.activ_img;
+                        this.form.time = [response.data.start_date, response.data.end_date];
+                    })
+                    .catch(error => {
+                        console.log(error)
+                    })
+
             },
             changeActiv () {
                 this.dialogFormVisible = false
+                let param = {
+                        id: this.form.id,
+                        activ_title: this.form.title,
+                        activ_img: this.form.img,
+                        activ_desc: this.form.desc,
+                        start_date: this.form.time[0],
+                        end_data: this.form.time[1]
+                    }
+                // this.$axios.post('https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/Modify', this.qs.stringify(param))
+                this.$axios({
+                    method: 'POST',
+                    url: 'https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/Modify',
+                    data: this.qs.stringify({
+                        id: this.form.id,
+                        activ_title: this.form.title,
+                        activ_img: this.form.img,
+                        activ_desc: this.form.desc,
+                        start_date: this.form.time[0],
+                        end_data: this.form.time[1]
+                    })
+                })
+                    .then(response => {
+                        if(response.data.success){
+                            this.$message({
+                                message: 'Success to update activity. Congrats!',
+                                type: 'success',
+                            })
+                            this.getActivities()
+                        }
+                        else {
+                            this.$message({
+                                message: 'Failed to update activity. Shame!',
+                                type: 'warning'
+                            })
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        this.$message.error('Request Error, please check the console to find out what goes wrong.');
+                    })
             }
         },
         filters: {
