@@ -35,7 +35,7 @@
     },
     methods: {
       drawPie () {
-        let myChart = echarts.init(document.getElementById('myChart2'))
+        let myChart = echarts.init(document.getElementById('myChart2'), 'light')
         let option = {
           legend: {},
           tooltip: {},
@@ -94,7 +94,7 @@
           subType: "category",
           subNum: "7",
         };
-        this.$axios.post('https://haoxipeng.chinacloudapp.cn/scrm-1.0/rest/report/quarterly', param)
+        this.$axios.post('https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/rest/report/quarterly', param)
           .then(response => {
             console.log(response);
             if (response.data.msgCode == 0) {
@@ -109,7 +109,7 @@
                 option.dataset.source[6].push(response.data.data.categorySalesList[i][5].salesCount);
                 option.dataset.source[7].push(response.data.data.categorySalesList[i][6].salesCount);
               }
-              console.log(option)
+              console.log(option);
               myChart.hideLoading();
               // 绘制图表
               myChart.clear()

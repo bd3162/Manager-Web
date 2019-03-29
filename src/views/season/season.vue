@@ -2,8 +2,9 @@
     <el-row>
         <el-col>
             <el-card class="box-card">
+                <h1>年度报表及各季度销量统计</h1>
                 <div slot="header" class="clearfix">
-                    <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+                    <span>选择年份: </span>
                     <el-select v-model="totalYear" placeholder="请选择">
                         <el-option
                                 v-for="item in years"
@@ -13,16 +14,20 @@
                         </el-option>
                     </el-select>
                 </div>
-                <div>
-                    <SeasonTotal :year="totalYear"></SeasonTotal>
-                </div>
-                <div>
-                    <CatePie :year="totalYear"></CatePie>
-                </div>
-            </el-card>
-        </el-col>
-        <el-col>
-            <el-card class="box-card">
+                <!--<div>-->
+                    <!--<SeasonTotal :year="totalYear"></SeasonTotal>-->
+                <!--</div>-->
+                <!--<div>-->
+                    <!--<CatePie :year="totalYear"></CatePie>-->
+                <!--</div>-->
+                <el-row :gutter="24">
+                    <el-col :span="10">
+                        <div><SeasonTotal :year="totalYear"></SeasonTotal></div>
+                    </el-col>
+                    <el-col :span="10">
+                        <div><CatePie :year="totalYear"></CatePie></div>
+                    </el-col>
+                </el-row>
             </el-card>
         </el-col>
     </el-row>
@@ -31,23 +36,19 @@
 <script>
   import season_total from './season_total'
   import season_pie from './season_pie'
+  import force from './force'
   export default {
     name: "Season",
     components: {
       SeasonTotal: season_total,
       CatePie: season_pie,
+        ForceTo: force,
     },
     data () {
       return {
-        totalYear: "2007",
+        totalYear: "2011",
         years: [
           {
-            value: '1998',
-            label: '1998'
-          }, {
-            value: '1999',
-            label: '1999'
-          }, {
             value: '2000',
             label: '2000'
           }, {
@@ -92,6 +93,6 @@
 
 <style scoped>
     .box-card {
-        width: 50%;
+        margin: 30px;
     }
 </style>

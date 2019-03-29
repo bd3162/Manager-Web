@@ -22,15 +22,15 @@
     computed: {
 
     },
-    watch:{//用于监测子组件暴露的属性值变化所触发的动作
-      year:{
+    watch: {//用于监测子组件暴露的属性值变化所触发的动作
+      year: {
         handler(newValue){
           this.year = newValue;
           this.drawBar();
         }
       }
     },
-    mounted() {
+    mounted () {
       this.drawBar()
     },
     methods: {
@@ -109,7 +109,7 @@
             }
           ]
         };
-        let myChart = echarts.init(document.getElementById('myChart'))
+        let myChart = echarts.init(document.getElementById('myChart'), 'light')
         // myChart.setOption(option);
         myChart.showLoading();
         let param = {
@@ -117,7 +117,7 @@
           statisDimens: "total",
           subNum: "2",
         };
-        this.$axios.post('https://haoxipeng.chinacloudapp.cn/scrm-1.0/rest/report/quarterly', param)
+        this.$axios.post('https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/rest/report/quarterly', param)
           .then(response => {
             console.log(response);
             if (response.data.msgCode == 0) {

@@ -1,10 +1,11 @@
 <template>
     <el-card class="box-card">
+        <h1>商店活动</h1>
         <el-popover
                 placement="right"
-                width="400"
-                trigger="click">
-            <el-form :model="form" label-width="80px" ref="form">
+                width="600"
+                v-model="popoverFormVisible">
+            <el-form :model="form" label-width="100px" ref="form">
                 <el-form-item label="活动名称">
                     <el-input v-model="addForm.title" auto-complete="off"></el-input>
                 </el-form-item>
@@ -18,20 +19,20 @@
                             align="right"
                             unlink-panels
                             range-separator="至"
-                            start-placeholder="开始"
-                            end-placeholder="结束"
-                            @change="getSTime"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            value-format="timestamp"
                             format="yyyy-MM-dd"
                             :picker-options="pickerOptions2">
                     </el-date-picker>
                 </el-form-item>
                 <el-form-item label="活动图片">
                     <el-input v-model="addForm.img" auto-complete="off"></el-input>
-                    <img :src="addForm.img" style="width: 40%"/>
+                    <img :src="addForm.img" style="width: 60%; margin-top: 5%"/>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="addActivity" round>立即创建</el-button>
-                    <el-button type="warning" round>取消</el-button>
+                    <el-button type="warning" @click="popoverFormVisible = false" round>取消</el-button>
                 </el-form-item>
             </el-form>
             <el-button slot="reference" type="primary" round>添加活动</el-button>
@@ -76,6 +77,9 @@
             <el-table-column
                     label="活动状态"
                     prop="start">
+                <template slot-scope="scope">
+                    {{ scope.row.start | stat(scope.row.end) }}
+                </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
@@ -100,16 +104,18 @@
                                         range-separator="至"
                                         start-placeholder="开始日期"
                                         end-placeholder="结束日期"
+                                        value-format="timestamp"
+                                        format="yyyy-MM-dd"
                                         :picker-options="pickerOptions2">
                                 </el-date-picker>
                             </el-form-item>
                             <el-form-item label="活动图片" :label-width="formLabelWidth">
                                 <el-input v-model="form.img" auto-complete="off"></el-input>
-                                <img :src="form.img" style="width: 40%"/>
+                                <img :src="form.img" style="width: 40%; margin-top: 5%"/>
                             </el-form-item>
                         </el-form>
                         <div slot="footer" class="dialog-footer">
-                            <el-button @click="dialogFormVisible = false" round>取 消</el-button>
+                            <el-button type="warning" @click="undoChange" round>取 消</el-button>
                             <el-button type="primary" @click="changeActiv" round>确 定</el-button>
                         </div>
                     </el-dialog>
@@ -138,13 +144,13 @@
         data () {
             return {
                 addForm: {
-                    id: '',
                     title: '',
                     desc: '',
                     img: '',
                     time: [],
                 },
                 dialogFormVisible: false,
+                popoverFormVisible: false,
                 tableData: [{
                     id: '12987122',
                     title: '好滋好味鸡蛋仔',
@@ -160,7 +166,9 @@
                     img: '',
                     time: [],
                 },
-                formLabelWidth: '150px',
+                formLabelWidth: '180px',
+
+                //
                 pickerOptions2: {
                     shortcuts: [{
                         text: '最近一周',
@@ -191,9 +199,7 @@
             }
         },
         computed: {
-            stat () {
 
-            }
         },
         mounted() {
             this.getActivities()
@@ -205,15 +211,51 @@
             onSubmit () {
                 console.log('submit!');
             },
+            // 添加活动
             addActivity () {
                 console.log("type:" + typeof this.addForm.time[0])
-                console.log("time: "+this.addForm.time[0])
+                console.log("time: "+this.addForm.time)
+                this.$axios({
+                    method: 'POST',
+                    url: 'https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/activity/add',
+                    data: this.qs.stringify({
+                        activ_title: this.addForm.title,
+                        activ_img: this.addForm.img,
+                        activ_desc: this.addForm.desc,
+                        start_date: parseInt(this.addForm.time[0]/1000),
+                        end_date: parseInt(this.addForm.time[1]/1000)
+                    })
+                })
+                    .then(response => {
+                        if (response.data.success) {
+                            this.$message({
+                                message: 'Success to add activity. Congrats!',
+                                type: 'success',
+                            });
+                            this.popoverFormVisible = false;
+                            this.addForm.title = '';
+                            this.addForm.desc = '';
+                            this.addForm.time = [];
+                            this.addForm.img = '';
+                            this.getActivities()
+                        }
+                        else {
+                            this.$message({
+                                message: 'Fail to add activity. Shame!',
+                                type: 'warning',
+                            })
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        this.$message.error('Request Error, please check the console to find out what goes wrong.');
+                    })
             },
             getActivities () {
                 this.tableData = [];
                 this.$axios({
-                    methods: 'GET',
-                    url: 'https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/selectList',
+                    method: 'GET',
+                    url: 'https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/activity/selectList',
                     data: this.qs.stringify({
 
                     }),
@@ -237,13 +279,13 @@
                     })
             },
             handleDelete (index, row) {
-                this.$axios.get(`https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/delete?activity_id=${row.id}`)
+                this.$axios.get(`https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/activity/delete?activity_id=${row.id}`)
                     .then(response => {
                         if(response.data.success){
                             this.$message({
                                 message: 'Success to delete activity. Congrats!',
                                 type: 'success',
-                            })
+                            });
                             this.getActivities()
                         }
                         else {
@@ -259,20 +301,11 @@
                     })
             },
             handleEdit (index, row) {
-                this.dialogFormVisible = true
-                // this.form.id = row.id;
-                // this.form.title = row.title;
-                // this.form.desc = row.desc;
-                // this.form.img = row.img;
-                // this.form.time = [row.start, row.end];
-                console.log(typeof row.id)
-                let param = {
-                    'id': 4,
-                }
-                // this.$axios.get(`https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/selectById?id=${row.id}`)
+                this.dialogFormVisible = true;
+                console.log(typeof row.id);
                 this.$axios({
                     method: 'GET',
-                    url: `https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/selectById?id=${row.id}`,
+                    url: `https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/activity/selectById?id=${row.id}`,
                     // data: {
                     //     id: 4
                     // }
@@ -282,34 +315,33 @@
                         this.form.title = response.data.activ_title;
                         this.form.desc = response.data.activ_desc;
                         this.form.img = response.data.activ_img;
-                        this.form.time = [response.data.start_date, response.data.end_date];
+                        this.form.time = [response.data.start_date*1000, response.data.end_date*1000];
                     })
                     .catch(error => {
                         console.log(error)
                     })
 
             },
+            undoChange () {
+                this.dialogFormVisible = false;
+                this.form.id = '';
+                this.form.title = '';
+                this.form.desc = '';
+                this.form.img = '';
+                this.form.time = [];
+            },
             changeActiv () {
-                this.dialogFormVisible = false
-                let param = {
-                        id: this.form.id,
-                        activ_title: this.form.title,
-                        activ_img: this.form.img,
-                        activ_desc: this.form.desc,
-                        start_date: this.form.time[0],
-                        end_data: this.form.time[1]
-                    }
-                // this.$axios.post('https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/Modify', this.qs.stringify(param))
+                this.dialogFormVisible = false;
                 this.$axios({
                     method: 'POST',
-                    url: 'https://haoxipeng.chinacloudapp.cn/scrm-1.0/activity/Modify',
+                    url: 'https://wsw.chinanorth.cloudapp.chinacloudapi.cn/scrm-1.0/activity/Modify',
                     data: this.qs.stringify({
                         id: this.form.id,
                         activ_title: this.form.title,
                         activ_img: this.form.img,
                         activ_desc: this.form.desc,
-                        start_date: this.form.time[0],
-                        end_data: this.form.time[1]
+                        start_date: parseInt(this.form.time[0]/1000),
+                        end_date: parseInt(this.form.time[1]/1000)
                     })
                 })
                     .then(response => {
@@ -317,7 +349,7 @@
                             this.$message({
                                 message: 'Success to update activity. Congrats!',
                                 type: 'success',
-                            })
+                            });
                             this.getActivities()
                         }
                         else {
@@ -355,6 +387,18 @@
                     return value.slice(0,8) + '...'
                 }
                 return value
+            },
+            stat(start, end) {
+                let now = Date.parse(new Date()) / 1000;
+                if (now < start && start < end) {
+                    return "未开始"
+                }
+                else if (now < end && start < now) {
+                    return "进行中"
+                }
+                else if (now > end && end > start) {
+                    return "已结束"
+                }
             }
         }
     }
